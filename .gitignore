@@ -1,0 +1,38 @@
+# === Node Modules ===
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# === Client Logic & Code (to be added later) ===
+client/public/
+client/components/
+client/pages/
+client/index.js
+client/index.css
+client/App.js
+
+# === Server Logic (to be added later) ===
+server/routes/
+server/services/
+server/middleware/
+server/test/
+server/index.js
+
+# === Environment and Secrets ===
+server/.env
+client/.env
+.env
+
+# === Build Artifacts / System / Editor Files ===
+dist/
+build/
+*.log
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# === Output Files ===
+*.pdf
+uploads/
+coverage/
