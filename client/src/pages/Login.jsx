@@ -1,26 +1,42 @@
- 
-import React from "react";
+import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
-  // const handleGoogleLogin = () => {
-  //   // console.log(import.meta.env.VITE_API_BASE_URL);
-  //   window.open(`${import.meta.env.VITE_API_BASE_URL}/auth/google`, "_self");
-  // };
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  // console.log("✅ Frontend Env:", import.meta.env.VITE_API_BASE_URL);  // Add this line
+  const handleGoogleLogin = () => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (!baseUrl) {
+      alert("VITE_API_BASE_URL is not defined");
+      return;
+    }
+    window.open(`${baseUrl}/api/auth/google`, "_self");
+  };
 
-const handleGoogleLogin = () => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL;
-  if (!baseUrl) {
-    alert("VITE_API_BASE_URL is not defined");
-    return;
-  }
-  // window.open(`${baseUrl}/routes/auth`, "_self");
-  window.open(`${baseUrl}/api/auth/google`, "_self"); // if using OAuth redirect method
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Login failed");
+      localStorage.setItem("token", data.token);
+      navigate("/");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#e3f2fd] flex items-center justify-center px-4">
@@ -79,13 +95,19 @@ const handleGoogleLogin = () => {
           </div>
 
           {/* Email/Password Login */}
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
             <div>
               <label className="block mb-1 text-sm font-medium">Email</label>
               <input
                 type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
                 placeholder="you@example.com"
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
             </div>
 
@@ -93,8 +115,12 @@ const handleGoogleLogin = () => {
               <label className="block mb-1 text-sm font-medium">Password</label>
               <input
                 type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
                 placeholder="••••••••"
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
             </div>
 
