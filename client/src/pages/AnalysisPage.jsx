@@ -1,10 +1,22 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FileText, Upload } from 'lucide-react';
+import { FileText, Upload, CheckCircle } from 'lucide-react';
 
 const AnalysisPage = () => {
-  const { getRootProps, getInputProps, isDragActive } = useDropzone();
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeText, setResumeText] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: {
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc', '.docx'],
+      'text/plain': ['.txt']
+    },
+    onDrop: (acceptedFiles) => {
+      setResumeFile(acceptedFiles[0]);
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -25,11 +37,16 @@ const AnalysisPage = () => {
 
             <div
               {...getRootProps()}
-              className="border-2 border-dashed rounded-lg p-8 text-center"
+              className={`border-2 border-dashed rounded-lg p-8 text-center ${isDragActive ? 'bg-blue-50 border-blue-400' : ''}`}
             >
               <input {...getInputProps()} />
               <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p>Drop your resume or click to upload</p>
+              <p>{isDragActive ? "Drop your resume here..." : "Drop your resume or click to upload"}</p>
+              {resumeFile && (
+                <p className="mt-4 text-sm text-green-600 flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4 mr-1" /> {resumeFile.name} uploaded
+                </p>
+              )}
             </div>
 
             <div className="mt-6">
@@ -39,7 +56,12 @@ const AnalysisPage = () => {
               <textarea
                 placeholder="Paste your resume content here..."
                 className="input-field h-32 resize-none w-full border p-2"
+                value={resumeText}
+                onChange={(e) => setResumeText(e.target.value)}
               />
+              {resumeText && (
+                <p className="text-xs text-gray-500 mt-1">Characters: {resumeText.length}</p>
+              )}
             </div>
           </div>
 
@@ -56,7 +78,12 @@ const AnalysisPage = () => {
             <textarea
               placeholder="Paste the job description here..."
               className="input-field h-64 resize-none w-full border p-2"
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
             />
+            {jobDescription && (
+              <p className="text-xs text-gray-500 mt-1">Words: {jobDescription.trim().split(/\s+/).length}</p>
+            )}
           </div>
         </div>
       </div>
