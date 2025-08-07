@@ -1,11 +1,13 @@
+
 import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FileText, Upload, CheckCircle } from 'lucide-react';
+import { FileText, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 
 const AnalysisPage = () => {
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeText, setResumeText] = useState('');
   const [jobDescription, setJobDescription] = useState('');
+  const [error, setError] = useState('');
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -15,8 +17,24 @@ const AnalysisPage = () => {
     },
     onDrop: (acceptedFiles) => {
       setResumeFile(acceptedFiles[0]);
+      setError('');
     },
   });
+
+  const handleAnalyze = () => {
+    if (!(resumeFile || resumeText.trim())) {
+      setError('Please upload a resume file or paste resume content.');
+      return;
+    }
+    if (!jobDescription.trim()) {
+      setError('Please paste the job description.');
+      return;
+    }
+
+    setError('');
+    // Trigger analysis (mocked for now)
+    alert('Resume analysis triggered!');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -26,6 +44,13 @@ const AnalysisPage = () => {
             Analyze Your Resume
           </h1>
         </div>
+
+        {error && (
+          <div className="mb-6 bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded flex items-center">
+            <AlertCircle className="w-4 h-4 mr-2" />
+            {error}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Resume Upload Section */}
@@ -85,6 +110,15 @@ const AnalysisPage = () => {
               <p className="text-xs text-gray-500 mt-1">Words: {jobDescription.trim().split(/\s+/).length}</p>
             )}
           </div>
+        </div>
+
+        <div className="mt-10 text-center">
+          <button
+            onClick={handleAnalyze}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded"
+          >
+            Analyze Resume
+          </button>
         </div>
       </div>
     </div>
