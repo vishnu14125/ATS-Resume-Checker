@@ -39,6 +39,7 @@ router.post('/upload', upload.single('resume'), async (req, res) => {
       score
     });
 
+    console.log('Saving resume:', newResume);
     await newResume.save();
 
     res.json({
