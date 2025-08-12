@@ -15,32 +15,70 @@ async function parseDocument(buffer, mimeType) {
     }
   } catch (error) {
     console.error('Document parsing error:', error);
-    throw error;
+    throw new Error(`Failed to parse document: ${error.message}`);
   }
 }
 
 async function parsePDF(buffer) {
-  const data = await pdfParse(buffer);
-  return cleanExtractedText(data.text);
+  try {
+    const data = await pdfParse(buffer);
+    if (!data.text || data.text.trim().length === 0) {
+      throw new Error('No text content found in PDF');
+    }
+    const cleanedText = cleanExtractedText(data.text);
+    console.log(`📄 PDF parsed successfully. Pages: ${data.numpages}, Text length: ${cleanedText.length}`);
+    return cleanedText;
+  } catch (error) {
+    console.error('PDF parsing error:', error);
+    throw new Error('Failed to parse PDF file. Please ensure the PDF contains readable text.');
+  }
 }
 
 async function parseDOCX(buffer) {
-  const result = await mammoth.extractRawText({ buffer });
-  return cleanExtractedText(result.value);
+  try {
+    const result = await mammoth.extractRawText({ buffer });
+    if (!result.value || result.value.trim().length === 0) {
+      throw new Error('No text content found in DOCX');
+    }
+    const cleanedText = cleanExtractedText(result.value);
+    console.log(`📄 DOCX parsed successfully. Text length: ${cleanedText.length}`);
+    return cleanedText;
+  } catch (error) {
+    console.error('DOCX parsing error:', error);
+    throw new Error('Failed to parse DOCX file. Please ensure the document contains readable text.');
+  }
 }
 
 function parseTXT(buffer) {
-  return cleanExtractedText(buffer.toString('utf-8'));
+  try {
+    const text = buffer.toString('utf-8');
+    if (!text || text.trim().length === 0) {
+      throw new Error('No text content found in file');
+    }
+    const cleanedText = cleanExtractedText(text);
+    console.log(`📄 TXT parsed successfully. Text length: ${cleanedText.length}`);
+    return cleanedText;
+  } catch (error) {
+    console.error('TXT parsing error:', error);
+    throw new Error('Failed to parse text file.');
+  }
 }
 
 function cleanExtractedText(text) {
-  return text.replace(/\s+/g, ' ').trim();
+  return text
+    .replace(/\s+/g, ' ')
+    .replace(/\n\s*\n/g, '\n')
+    .replace(/[^\w\s\.\,\;\:\!\?\-\(\)\[\]\{\}]/g, ' ')
+    .replace(/\s+([.,;:!?])/g, '$1')
+    .replace(/([.,;:!?])\s*/g, '$1 ')
+    .trim();
 }
 
 function validateFileSize(buffer, maxSize = 10 * 1024 * 1024) {
   if (buffer.length > maxSize) {
-    throw new Error(`File exceeds ${maxSize / (1024 * 1024)}MB`);
+    throw new Error(`File size exceeds maximum limit of ${maxSize / (1024 * 1024)}MB`);
   }
+  return true;
 }
 
 function getFileInfo(buffer, originalName, mimeType) {
@@ -58,11 +96,12 @@ function getFileExtension(filename) {
 }
 
 function isSupportedFileType(mimeType) {
-  return [
+  const supportedTypes = [
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'text/plain'
-  ].includes(mimeType);
+  ];
+  return supportedTypes.includes(mimeType);
 }
 
 module.exports = {
