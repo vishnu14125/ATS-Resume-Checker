@@ -91,7 +91,60 @@ function sanitizeText(text) {
     .substring(0, 10000); // Limit length to prevent abuse
 }
 
+/**
+ * Validate API key (if needed for future use)
+ */
+function validateAPIKey(req, res, next) {
+  const apiKey = req.headers['x-api-key'];
+  
+  // For now, this is optional - can be implemented later for rate limiting
+  if (apiKey && apiKey !== process.env.OPENAI_API_KEY) {
+    return res.status(401).json({
+      error: 'Invalid API key',
+      message: 'Please provide a valid API key'
+    });
+  }
+
+  next();
+}
+
+/**
+ * Rate limiting middleware
+ */
+function rateLimit(req, res, next) {
+  // Simple in-memory rate limiting (for production, use Redis)
+  const clientIP = req.ip;
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000; // 15 minutes
+  const maxRequests = 100;
+
+  // Initialize rate limit tracking (in production, use Redis)
+  if (!req.app.locals.rateLimit) {
+    req.app.locals.rateLimit = new Map();
+  }
+
+  const userRequests = req.app.locals.rateLimit.get(clientIP) || [];
+  
+  // Remove old requests outside the window
+  const validRequests = userRequests.filter(timestamp => now - timestamp < windowMs);
+  
+  if (validRequests.length >= maxRequests) {
+    return res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: 'Too many requests. Please try again later.'
+    });
+  }
+
+  // Add current request
+  validRequests.push(now);
+  req.app.locals.rateLimit.set(clientIP, validRequests);
+
+  next();
+}
+
 module.exports = {
   validateAnalysisRequest,
-  validateFileUpload
+  validateFileUpload,
+  validateAPIKey,
+  rateLimit
 };
