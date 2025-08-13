@@ -27,9 +27,71 @@ function validateAnalysisRequest(req, res, next) {
     });
   }
 
+  // Sanitize inputs
+  req.body.resumeText = sanitizeText(resumeText);
+  req.body.jobDescription = sanitizeText(jobDescription);
+
   next();
 }
 
+/**
+ * Validate file upload request
+ */
+function validateFileUpload(req, res, next) {
+  if (!req.file) {
+    return res.status(400).json({
+      error: 'No file uploaded',
+      message: 'Please upload a resume file'
+    });
+  }
+
+  const { originalname, mimetype, size } = req.file;
+
+  // Check file size (10MB limit)
+  const maxSize = 10 * 1024 * 1024;
+  if (size > maxSize) {
+    return res.status(400).json({
+      error: 'File too large',
+      message: `File size must be less than ${maxSize / (1024 * 1024)}MB`
+    });
+  }
+
+  // Check file type
+  const allowedTypes = [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain'
+  ];
+
+  if (!allowedTypes.includes(mimetype)) {
+    return res.status(400).json({
+      error: 'Invalid file type',
+      message: 'Only PDF, DOCX, and TXT files are supported'
+    });
+  }
+
+  // Check filename
+  if (!originalname || originalname.trim().length === 0) {
+    return res.status(400).json({
+      error: 'Invalid filename',
+      message: 'File must have a valid name'
+    });
+  }
+
+  next();
+}
+
+/**
+ * Sanitize text input
+ */
+function sanitizeText(text) {
+  return text
+    .trim()
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .substring(0, 10000); // Limit length to prevent abuse
+}
+
 module.exports = {
-  validateAnalysisRequest
+  validateAnalysisRequest,
+  validateFileUpload
 };
