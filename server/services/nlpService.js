@@ -140,7 +140,56 @@ function calculateBasicSimilarity(text1, text2) {
   return intersection.size / union.size;
 }
 
+function extractActionVerbs(text) {
+  const actionVerbs = [
+    'managed', 'developed', 'created', 'implemented', 'designed',
+    'led', 'coordinated', 'analyzed', 'improved', 'optimized',
+    'increased', 'decreased', 'reduced', 'enhanced', 'streamlined',
+    'facilitated', 'delivered', 'achieved', 'exceeded', 'maintained',
+    'supervised', 'trained', 'mentored', 'collaborated', 'negotiated',
+    'resolved', 'generated', 'produced', 'established', 'launched'
+  ];
+
+  const words = text.toLowerCase().split(/\s+/);
+  const foundVerbs = actionVerbs.filter(verb => 
+    words.some(word => word.includes(verb))
+  );
+
+  return [...new Set(foundVerbs)];
+}
+
+function calculateReadability(text) {
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const words = text.split(/\s+/).filter(w => w.length > 0);
+  const syllables = countSyllables(text);
+
+  if (!sentences.length || !words.length) return 0;
+
+  const fleschScore = 206.835 - 
+    (1.015 * (words.length / sentences.length)) - 
+    (84.6 * (syllables / words.length));
+  
+  return Math.max(0, Math.min(100, fleschScore));
+}
+
+function countSyllables(text) {
+  const words = text.toLowerCase().split(/\s+/);
+  let syllableCount = 0;
+  words.forEach(word => {
+    const cleanWord = word.replace(/[^a-z]/g, '');
+    if (cleanWord.length <= 3) {
+      syllableCount += 1;
+    } else {
+      const vowels = cleanWord.match(/[aeiouy]+/g);
+      syllableCount += vowels ? vowels.length : 1;
+    }
+  });
+  return syllableCount;
+}
+
 module.exports = {
   extractKeywords,
-  calculateSimilarity
+  calculateSimilarity,
+  extractActionVerbs,
+  calculateReadability
 };
