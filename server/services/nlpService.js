@@ -95,6 +95,52 @@ function extractBasicKeywords(text, maxKeywords = 20) {
     .map(([word]) => word);
 }
 
+async function calculateSimilarity(text1, text2) {
+  try {
+    const truncatedText1 = text1.substring(0, 2000);
+    const truncatedText2 = text2.substring(0, 2000);
+
+    const embedding1 = await openai.embeddings.create({
+      model: "text-embedding-ada-002",
+      input: truncatedText1,
+    });
+
+    const embedding2 = await openai.embeddings.create({
+      model: "text-embedding-ada-002",
+      input: truncatedText2,
+    });
+
+    return Math.max(0, Math.min(1, cosineSimilarity(
+      embedding1.data[0].embedding,
+      embedding2.data[0].embedding
+    )));
+  } catch (error) {
+    console.error('Similarity calculation error:', error);
+    return calculateBasicSimilarity(text1, text2);
+  }
+}
+
+function cosineSimilarity(vecA, vecB) {
+  let dotProduct = 0, normA = 0, normB = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
+  }
+  normA = Math.sqrt(normA);
+  normB = Math.sqrt(normB);
+  return normA && normB ? dotProduct / (normA * normB) : 0;
+}
+
+function calculateBasicSimilarity(text1, text2) {
+  const words1 = new Set(text1.toLowerCase().split(/\s+/));
+  const words2 = new Set(text2.toLowerCase().split(/\s+/));
+  const intersection = new Set([...words1].filter(x => words2.has(x)));
+  const union = new Set([...words1, ...words2]);
+  return intersection.size / union.size;
+}
+
 module.exports = {
-  extractKeywords
+  extractKeywords,
+  calculateSimilarity
 };
