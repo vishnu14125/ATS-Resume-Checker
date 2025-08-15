@@ -1,11 +1,10 @@
- 
 function validateResumeStructure(resumeText) {
   const analysis = {
     sections: {},
-    sectionScore: 0
+    sectionScore: 0,
+    issues: []
   };
 
- 
   const essentialSections = [
     { name: 'contact', patterns: ['contact', 'email', 'phone', 'address'] },
     { name: 'summary', patterns: ['summary', 'objective', 'profile', 'about'] },
@@ -14,7 +13,6 @@ function validateResumeStructure(resumeText) {
     { name: 'skills', patterns: ['skills', 'competencies', 'technologies', 'tools'] }
   ];
 
-   
   let foundSections = 0;
   essentialSections.forEach(section => {
     const found = checkSection(resumeText, section.patterns);
@@ -22,8 +20,8 @@ function validateResumeStructure(resumeText) {
     if (found) foundSections++;
   });
 
-   
   analysis.sectionScore = (foundSections / essentialSections.length) * 100;
+  analysis.issues = checkATSCompatibility(resumeText);
 
   return analysis;
 }
@@ -31,6 +29,55 @@ function validateResumeStructure(resumeText) {
 function checkSection(text, patterns) {
   const lowerText = text.toLowerCase();
   return patterns.some(pattern => lowerText.includes(pattern));
+}
+
+function checkATSCompatibility(text) {
+  const issues = [];
+
+  if (text.includes('image') || text.includes('graphic') || text.includes('photo')) {
+    issues.push('Contains images or graphics that may not be parsed by ATS');
+  }
+
+  if (text.includes('table') || text.includes('grid')) {
+    issues.push('Contains tables that may not be parsed correctly by ATS');
+  }
+
+  const formattingPatterns = [
+    /\*\*.*?\*\*/g,
+    /\*.*?\*/g,
+    /_.*?_/g,
+    /`.*?`/g
+  ];
+
+  formattingPatterns.forEach(pattern => {
+    if (pattern.test(text)) {
+      issues.push('Contains formatting that may not be preserved by ATS');
+    }
+  });
+
+  if (text.includes('header') || text.includes('footer')) {
+    issues.push('Contains headers or footers that may interfere with ATS parsing');
+  }
+
+  if (/\bpage\s+\d+\b/i.test(text)) {
+    issues.push('Contains page numbers that may interfere with ATS parsing');
+  }
+
+  if (/\n\s*\n\s*\n/.test(text)) {
+    issues.push('Contains excessive line breaks that may affect ATS parsing');
+  }
+
+  const specialChars = /[^\w\s\.\,\;\:\!\?\-\(\)\[\]\{\}\@\#\$\%\&\+\=\/]/g;
+  const matches = text.match(specialChars);
+  if (matches && matches.length > text.length * 0.1) {
+    issues.push('Contains excessive special characters that may affect ATS parsing');
+  }
+
+  if (text.includes('font') || text.includes('size') || text.includes('pt')) {
+    issues.push('Contains font specifications that may not be preserved by ATS');
+  }
+
+  return issues;
 }
 
 module.exports = {
