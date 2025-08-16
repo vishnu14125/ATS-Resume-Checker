@@ -1,12 +1,10 @@
 function validateResumeStructure(resumeText) {
   const analysis = {
     sections: {},
-    sectionScore: 0,
     issues: [],
     recommendations: [],
-    extracted: {},
-    readability: {},
-    length: {}
+    score: 0,
+    sectionScore: 0
   };
 
   const essentialSections = [
@@ -22,13 +20,16 @@ function validateResumeStructure(resumeText) {
     const found = checkSection(resumeText, section.patterns);
     analysis.sections[section.name] = found;
     if (found) foundSections++;
-    else analysis.recommendations.push(`Add a ${section.name} section`);
   });
 
   analysis.sectionScore = (foundSections / essentialSections.length) * 100;
-  analysis.issues = checkATSCompatibility(resumeText);
-  analysis.readability = checkReadability(resumeText);
-  analysis.length = checkLength(resumeText);
+
+  const atsIssues = checkATSCompatibility(resumeText);
+  analysis.issues = [...atsIssues];
+
+  analysis.recommendations = generateRecommendations(analysis.sections, atsIssues);
+
+  analysis.score = calculateStructureScore(analysis.sectionScore, atsIssues.length);
 
   return analysis;
 }
@@ -50,15 +51,16 @@ function checkATSCompatibility(text) {
   }
 
   const formattingPatterns = [
-    /\*\*.*?\*\*/g,
-    /\*.*?\*/g,
-    /_.*?_/g,
-    /`.*?`/g
+    /\\.?\\*/g,
+    /\.?\*/g,
+    /.*?/g,
+    /.*?/g
   ];
 
   formattingPatterns.forEach(pattern => {
     if (pattern.test(text)) {
       issues.push('Contains formatting that may not be preserved by ATS');
+      return;
     }
   });
 
@@ -87,39 +89,120 @@ function checkATSCompatibility(text) {
   return issues;
 }
 
-function checkReadability(text) {
-  const sentences = text.split(/[.!?]/).filter(s => s.trim().length > 0);
-  const words = text.split(/\s+/).filter(w => w.trim().length > 0);
+function generateRecommendations(sections, issues) {
+  const recommendations = [];
 
-  const avgSentenceLength = sentences.length > 0 ? words.length / sentences.length : 0;
+  if (!sections.contact) {
+    recommendations.push('Add a clear contact information section with email and phone number');
+  }
+
+  if (!sections.summary) {
+    recommendations.push('Include a professional summary or objective statement');
+  }
+
+  if (!sections.experience) {
+    recommendations.push('Add a detailed work experience section with quantifiable achievements');
+  }
+
+  if (!sections.education) {
+    recommendations.push('Include your educational background and relevant certifications');
+  }
+
+  if (!sections.skills) {
+    recommendations.push('Add a skills section highlighting relevant technical and soft skills');
+  }
+
+  if (issues.length > 0) {
+    recommendations.push('Use simple, clean formatting without images, tables, or excessive styling');
+    recommendations.push('Avoid headers, footers, and page numbers');
+    recommendations.push('Use standard fonts and avoid special formatting characters');
+  }
+
+  recommendations.push('Use bullet points for better readability');
+  recommendations.push('Include quantifiable achievements (e.g., "Increased sales by 25%")');
+  recommendations.push('Use action verbs to start bullet points');
+  recommendations.push('Keep the resume to 1-2 pages maximum');
+
+  return recommendations.slice(0, 8);
+}
+
+function calculateStructureScore(sectionScore, issueCount) {
+  let score = sectionScore;
+  const issuePenalty = issueCount * 10;
+  score = Math.max(0, score - issuePenalty);
+  if (sectionScore >= 80 && issueCount === 0) {
+    score = Math.min(100, score + 10);
+  }
+  return Math.round(score);
+}
+
+function extractSectionContent(text, sectionName) {
+  const sectionPatterns = {
+    contact: /(?:contact|email|phone|address)[:\s]*([^\n]+)/gi,
+    summary: /(?:summary|objective|profile|about)[:\s]*([^\n]+)/gi,
+    experience: /(?:experience|work history|employment)[:\s]*([^\n]+)/gi,
+    education: /(?:education|academic|degree)[:\s]*([^\n]+)/gi,
+    skills: /(?:skills|competencies|technologies)[:\s]*([^\n]+)/gi
+  };
+
+  const pattern = sectionPatterns[sectionName];
+  if (!pattern) return null;
+
+  const matches = [];
+  let match;
+  while ((match = pattern.exec(text)) !== null) {
+    matches.push(match[1].trim());
+  }
+
+  return matches.length > 0 ? matches : null;
+}
+
+function checkActionVerbs(text) {
+  const actionVerbs = [
+    'managed', 'developed', 'created', 'implemented', 'designed',
+    'led', 'coordinated', 'analyzed', 'improved', 'optimized',
+    'increased', 'decreased', 'reduced', 'enhanced', 'streamlined',
+    'facilitated', 'delivered', 'achieved', 'exceeded', 'maintained'
+  ];
+
+  const foundVerbs = actionVerbs.filter(verb => 
+    text.toLowerCase().includes(verb)
+  );
 
   return {
-    sentenceCount: sentences.length,
-    wordCount: words.length,
-    avgSentenceLength,
-    readability:
-      avgSentenceLength > 25 ? "Hard to read" :
-      avgSentenceLength < 12 ? "Too simple" :
-      "Good readability"
+    found: foundVerbs,
+    count: foundVerbs.length,
+    score: Math.min(100, (foundVerbs.length / 10) * 100)
   };
 }
 
-function checkLength(text) {
-  const words = text.split(/\s+/).filter(w => w.trim().length > 0);
-  const pages = Math.ceil(words.length / 400);
+function checkQuantifiableAchievements(text) {
+  const patterns = [
+    /\d+%/g,
+    /\$\d+[,\d]*/g,
+    /\d+\s*(?:people|employees|team members)/gi,
+    /\d+\s*(?:years|months)/gi,
+    /increased\s+by\s+\d+/gi,
+    /decreased\s+by\s+\d+/gi,
+    /reduced\s+by\s+\d+/gi
+  ];
 
-  let status;
-  if (pages > 2) status = "Too long – keep it under 2 pages";
-  else if (pages < 1) status = "Too short – expand with more details";
-  else status = "Good length";
+  const matches = [];
+  patterns.forEach(pattern => {
+    const found = text.match(pattern);
+    if (found) matches.push(...found);
+  });
 
   return {
-    wordCount: words.length,
-    estimatedPages: pages,
-    lengthStatus: status
+    found: matches,
+    count: matches.length,
+    score: Math.min(100, (matches.length / 5) * 100)
   };
 }
 
 module.exports = {
-  validateResumeStructure
+  validateResumeStructure,
+  extractSectionContent,
+  checkActionVerbs,
+  checkQuantifiableAchievements
 };
