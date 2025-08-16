@@ -2,7 +2,10 @@ function validateResumeStructure(resumeText) {
   const analysis = {
     sections: {},
     sectionScore: 0,
-    issues: []
+    issues: [],
+    recommendations: [],
+    extracted: {},
+    readability: {}
   };
 
   const essentialSections = [
@@ -18,10 +21,12 @@ function validateResumeStructure(resumeText) {
     const found = checkSection(resumeText, section.patterns);
     analysis.sections[section.name] = found;
     if (found) foundSections++;
+    else analysis.recommendations.push(`Add a ${section.name} section`);
   });
 
   analysis.sectionScore = (foundSections / essentialSections.length) * 100;
   analysis.issues = checkATSCompatibility(resumeText);
+  analysis.readability = checkReadability(resumeText);
 
   return analysis;
 }
@@ -78,6 +83,23 @@ function checkATSCompatibility(text) {
   }
 
   return issues;
+}
+
+function checkReadability(text) {
+  const sentences = text.split(/[.!?]/).filter(s => s.trim().length > 0);
+  const words = text.split(/\s+/).filter(w => w.trim().length > 0);
+
+  const avgSentenceLength = sentences.length > 0 ? words.length / sentences.length : 0;
+
+  return {
+    sentenceCount: sentences.length,
+    wordCount: words.length,
+    avgSentenceLength,
+    readability:
+      avgSentenceLength > 25 ? "Hard to read" :
+      avgSentenceLength < 12 ? "Too simple" :
+      "Good readability"
+  };
 }
 
 module.exports = {
