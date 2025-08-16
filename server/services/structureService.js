@@ -5,7 +5,8 @@ function validateResumeStructure(resumeText) {
     issues: [],
     recommendations: [],
     extracted: {},
-    readability: {}
+    readability: {},
+    length: {}
   };
 
   const essentialSections = [
@@ -27,6 +28,7 @@ function validateResumeStructure(resumeText) {
   analysis.sectionScore = (foundSections / essentialSections.length) * 100;
   analysis.issues = checkATSCompatibility(resumeText);
   analysis.readability = checkReadability(resumeText);
+  analysis.length = checkLength(resumeText);
 
   return analysis;
 }
@@ -99,6 +101,22 @@ function checkReadability(text) {
       avgSentenceLength > 25 ? "Hard to read" :
       avgSentenceLength < 12 ? "Too simple" :
       "Good readability"
+  };
+}
+
+function checkLength(text) {
+  const words = text.split(/\s+/).filter(w => w.trim().length > 0);
+  const pages = Math.ceil(words.length / 400);
+
+  let status;
+  if (pages > 2) status = "Too long – keep it under 2 pages";
+  else if (pages < 1) status = "Too short – expand with more details";
+  else status = "Good length";
+
+  return {
+    wordCount: words.length,
+    estimatedPages: pages,
+    lengthStatus: status
   };
 }
 
