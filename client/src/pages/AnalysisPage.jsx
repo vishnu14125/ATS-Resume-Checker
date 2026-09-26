@@ -1,60 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { 
-  Upload, 
-  FileText, 
-  AlertCircle, 
-  CheckCircle, 
-  Loader2,
-  ArrowRight,
-  X
-} from 'lucide-react';
-import toast from 'react-hot-toast';
 import axios from 'axios';
+import { motion } from 'framer-motion';
+import { Upload, FileText, CheckCircle, X, AlertCircle, ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const AnalysisPage = () => {
   const navigate = useNavigate();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [resumeText, setResumeText] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
   const [uploadedFile, setUploadedFile] = useState(null);
   const [fileName, setFileName] = useState('');
+  const [resumeText, setResumeText] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // File upload handling
+  // File upload handler
   const onDrop = async (acceptedFiles) => {
-  const file = acceptedFiles[0];
-  if (!file) return;
+    const file = acceptedFiles[0];
+    if (!file) return;
 
-  setUploadedFile(file);
-  setFileName(file.name);
+    setUploadedFile(file);
+    setFileName(file.name);
 
-  try {
     const formData = new FormData();
     formData.append('resume', file);
 
-    const response = await axios.post('/api/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post('/api/upload', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+      });
 
-    if (response.data.success) {
-      setResumeText(response.data.data.text);
-      toast.success('Resume uploaded and parsed successfully!');
-      
-      // ✅ Store resumeId for export
-      localStorage.setItem('resumeId', response.data.id);
+      if (response.data.success) {
+        setResumeText(response.data.data.text);
+        toast.success('Resume extracted successfully');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error.response?.data?.error?.message || 'Failed to extract resume text');
+      setUploadedFile(null);
+      setFileName('');
     }
-  } catch (error) {
-    console.error('Upload error:', error);
-    toast.error(error.response?.data?.message || 'Failed to upload resume');
-    setUploadedFile(null);
-    setFileName('');
-  }
-};
-
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -64,18 +53,18 @@ const AnalysisPage = () => {
       'text/plain': ['.txt']
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 10 * 1024 * 1024,
   });
 
-  // Remove uploaded file
   const removeFile = () => {
     setUploadedFile(null);
     setFileName('');
     setResumeText('');
   };
 
-  // Handle analysis
   const handleAnalysis = async () => {
+    if (isAnalyzing) return;
+
     if (!resumeText.trim() || !jobDescription.trim()) {
       toast.error('Please provide both resume text and job description');
       return;
@@ -84,173 +73,176 @@ const AnalysisPage = () => {
     setIsAnalyzing(true);
 
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.post('/api/analyze', {
         resumeText: resumeText.trim(),
         jobDescription: jobDescription.trim(),
-        fileName: fileName || 'Resume'
+        fileName: fileName || 'Manual Text Input'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.data.success) {
-        // Store results in localStorage for the results page
-        localStorage.setItem('analysisResults', JSON.stringify(response.data.data));
-        navigate('/results');
         toast.success('Analysis completed successfully!');
+        navigate(`/results/${response.data.data.id}`);
       }
     } catch (error) {
       console.error('Analysis error:', error);
-      toast.error(error.response?.data?.message || 'Failed to analyze resume');
+      if (error.response?.status === 429 || error.response?.status === 503) {
+        toast.error('AI service is temporarily rate-limited. Please try again in a moment.', { duration: 6000 });
+      } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        toast.error('The analysis took too long and timed out. Please try again.', { duration: 5000 });
+      } else {
+        toast.error(error.response?.data?.error?.message || 'Failed to analyze alignment');
+      }
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-surface-bg py-12">
+      <div className="section-container max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
         >
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Analyze Your Resume
+          <div className="text-center mb-16">
+            <h1 className="heading-1 mb-4">
+              Analyze Job Alignment
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Upload your resume and provide a job description to get AI-powered analysis and improvement suggestions.
+            <p className="body-large max-w-2xl mx-auto">
+              Upload your resume and the target job description. Our engine will deterministically score your fit and generate an intelligence report.
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Resume Upload Section */}
-            <div className="card">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                <FileText className="w-5 h-5 mr-2" />
-                Resume Upload
-              </h2>
+            {/* Step 1: Resume */}
+            <div className="surface-card p-8 flex flex-col h-full">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-8 h-8 rounded-full bg-ink-100 text-ink-700 font-bold flex items-center justify-center">1</div>
+                <h2 className="heading-3">Your Resume</h2>
+              </div>
 
               {!uploadedFile ? (
                 <div
                   {...getRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200 ${
                     isDragActive
-                      ? 'border-primary-400 bg-primary-50'
-                      : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+                      ? 'border-brand-400 bg-brand-50 shadow-inner'
+                      : 'border-ink-200 hover:border-brand-400 hover:bg-brand-50/50'
                   }`}
                 >
                   <input {...getInputProps()} />
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <div className="w-16 h-16 bg-white shadow-sm text-ink-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-ink-100">
+                    <Upload className="w-8 h-8" />
+                  </div>
                   {isDragActive ? (
-                    <p className="text-primary-600 font-medium">Drop your resume here...</p>
+                    <p className="text-brand-700 font-semibold text-lg">Drop your resume here...</p>
                   ) : (
                     <div>
-                      <p className="text-gray-600 mb-2">
-                        Drag & drop your resume here, or <span className="text-primary-600">browse</span>
+                      <p className="text-ink-700 font-semibold mb-2">
+                        Drag & drop your file here, or <span className="text-brand-600 underline decoration-brand-300 underline-offset-4">browse</span>
                       </p>
-                      <p className="text-sm text-gray-500">
-                        Supports PDF, DOCX, and TXT files (max 10MB)
+                      <p className="text-sm text-ink-500">
+                        Supports PDF, DOCX, and TXT (Max 10MB)
                       </p>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="border border-gray-200 rounded-lg p-4">
+                <div className="border border-emerald-200 bg-emerald-50 rounded-2xl p-6 relative">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-success-600 mr-2" />
-                      <span className="font-medium text-gray-900">{fileName}</span>
+                    <div className="flex items-center min-w-0 pr-8">
+                      <div className="w-12 h-12 bg-white shadow-sm text-emerald-600 rounded-xl flex items-center justify-center mr-4 shrink-0 border border-emerald-100">
+                        <CheckCircle className="w-6 h-6" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-bold text-ink-900 truncate block text-lg">{fileName}</span>
+                        <p className="text-sm text-emerald-700 font-medium mt-0.5">Successfully extracted</p>
+                      </div>
                     </div>
                     <button
                       onClick={removeFile}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-ink-400 hover:text-rose-500 p-2 rounded-lg hover:bg-white transition-colors absolute top-4 right-4"
+                      title="Remove file"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    File uploaded successfully
-                  </p>
                 </div>
               )}
 
-              {/* Manual Resume Input */}
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Or paste your resume text:
+              <div className="mt-8 flex-1 flex flex-col">
+                <label className="label-base text-ink-500 flex justify-between">
+                  <span>Or paste raw text:</span>
+                  <span className="font-normal text-xs">{resumeText.length} chars</span>
                 </label>
                 <textarea
                   value={resumeText}
                   onChange={(e) => setResumeText(e.target.value)}
                   placeholder="Paste your resume content here..."
-                  className="input-field h-32 resize-none"
+                  className="input-base flex-1 min-h-[160px] resize-none font-mono text-sm leading-relaxed"
                   disabled={isAnalyzing}
                 />
               </div>
             </div>
 
-            {/* Job Description Section */}
-            <div className="card">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                <FileText className="w-5 h-5 mr-2" />
-                Job Description
-              </h2>
+            {/* Step 2: JD */}
+            <div className="surface-card p-8 flex flex-col h-full">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-ink-100 text-ink-700 font-bold flex items-center justify-center">2</div>
+                  <h2 className="heading-3">Target Role</h2>
+                </div>
+              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Paste the job description you're applying for:
+              <div className="flex-1 flex flex-col">
+                <label className="label-base text-ink-500 flex justify-between">
+                  <span>Paste the complete job description:</span>
+                  <span className="font-normal text-xs">{jobDescription.length} chars</span>
                 </label>
                 <textarea
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
-                  placeholder="Paste the job description here..."
-                  className="input-field h-64 resize-none"
+                  placeholder="Example: We are looking for a Senior Frontend Engineer with 5+ years of experience in React, TypeScript, and Node.js..."
+                  className="input-base flex-1 min-h-[300px] resize-none font-mono text-sm leading-relaxed"
                   disabled={isAnalyzing}
                 />
               </div>
 
-              {/* Tips */}
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-start">
-                  <AlertCircle className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-sm font-medium text-blue-900 mb-1">
-                      Tips for better analysis:
-                    </h3>
-                    <ul className="text-sm text-blue-800 space-y-1">
-                      <li>• Include the complete job description</li>
-                      <li>• Make sure your resume is in text format</li>
-                      <li>• The more detailed the job description, the better the analysis</li>
-                    </ul>
-                  </div>
-                </div>
+              <div className="mt-6 p-4 bg-ink-50 border border-ink-100 rounded-xl flex items-start space-x-3">
+                <Sparkles className="w-5 h-5 text-ink-400 shrink-0 mt-0.5" />
+                <p className="text-sm text-ink-600 leading-relaxed">
+                  <strong>Tip:</strong> Don't worry about formatting. Just paste the raw text. Our extraction engine will automatically identify required and preferred skills.
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Analysis Button */}
-          <div className="text-center mt-8">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+          {/* Action Button */}
+          <div className="text-center mt-12 mb-8">
+            <button
               onClick={handleAnalysis}
               disabled={isAnalyzing || !resumeText.trim() || !jobDescription.trim()}
-              className={`btn-primary text-lg px-8 py-3 flex items-center space-x-2 mx-auto ${
-                (!resumeText.trim() || !jobDescription.trim()) && 'opacity-50 cursor-not-allowed'
+              className={`btn-primary text-lg px-12 py-4 ${
+                (!resumeText.trim() || !jobDescription.trim()) ? '' : 'hover:scale-105 shadow-xl shadow-brand-500/20'
               }`}
             >
               {isAnalyzing ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Analyzing...</span>
+                  <Loader2 className="w-6 h-6 animate-spin mr-3" />
+                  <span>Processing Intelligence...</span>
                 </>
               ) : (
                 <>
-                  <span>Analyze Resume</span>
-                  <ArrowRight className="w-5 h-5" />
+                  <span>Analyze Alignment</span>
+                  <ArrowRight className="w-6 h-6 ml-3" />
                 </>
               )}
-            </motion.button>
+            </button>
           </div>
         </motion.div>
       </div>

@@ -1,0 +1,16 @@
+{
+  "matches": [
+    {
+      "requirementCanonical": "javascript",
+      "requirementClassification": "required",
+      "matchType": "missing",
+      "confidence": 1.0,
+      "resumeSection": null,
+      "resumeEvidence": null,
+      "resumeText": null,
+      "evidenceType": null
+    }
+  ],
+  "expectedScore": 0.0,
+  "description": "Java is present but JD wants JavaScript. Pipeline outputs missing for JS."
+}

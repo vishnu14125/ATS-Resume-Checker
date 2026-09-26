@@ -1,0 +1,10 @@
+const fs = require('fs');
+let c = fs.readFileSync('server/services/intelligence/ExperienceAnalyzerV2.js', 'utf8');
+c = c.replace(/\\\\d/g, '\\d');
+c = c.replace(/\\\\s/g, '\\s');
+c = c.replace(/\\\\n/g, '\\n');
+c = c.replace(/\\\\\+/g, '\\+');
+c = c.replace(/\\\\#/g, '\\#');
+c = c.replace(/\\\\\./g, '\\.');
+c = c.replace(/\\\\\//g, '\\/');
+fs.writeFileSync('server/services/intelligence/ExperienceAnalyzerV2.js', c);

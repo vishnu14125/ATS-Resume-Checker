@@ -53,6 +53,8 @@ const analyzeRoutes = require('./routes/analyze');
 const exportRoutes = require('./routes/export');
 // const authRoutes = require('./routes/auth_routes');
 const authRoutes = require('./routes/auth');
+const resumesRoutes = require('./routes/resumes');
+const careerRoutes = require('./routes/career');
 
 
 // Routes
@@ -68,7 +70,8 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/analyze', analyzeRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/auth', authRoutes);
-// app.use('/api/auth', authRoutes);
+app.use('/api/resumes', resumesRoutes);
+app.use('/api/career', careerRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -82,8 +85,11 @@ app.use('*', (req, res) => {
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(err.statusCode || 500).json({
-    error: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    success: false,
+    error: {
+      message: err.message || 'Internal Server Error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    }
   });
 });
 

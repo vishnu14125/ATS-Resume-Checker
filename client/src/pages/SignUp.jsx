@@ -1,112 +1,160 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { AlertCircle, FileText, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Signup = () => {
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSignup = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError('');
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/signup`, {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      const response = await fetch(`${baseUrl}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Signup failed');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Registration failed');
 
-      navigate('/login');
+      const token = data.data?.token || data.token;
+      login(token);
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#e3f2fd] flex items-center justify-center px-4">
-      <div className="flex w-full max-w-5xl rounded-xl overflow-hidden shadow-xl bg-white">
-        {/* Left Panel */}
-        <div className="w-1/2 hidden md:flex flex-col justify-center px-10 py-12 bg-[#bbdefb]">
-          <h2 className="text-3xl font-bold mb-6 text-gray-900 leading-snug">
-            Create a resume you <br />are proud of
-          </h2>
-          <ul className="space-y-5 text-base text-gray-700">
-            <li>✔ Ensure job-relevant sections like Projects and Skills are included.</li>
-            <li>✔ Compare with job descriptions and get match percentage.</li>
-            <li>✔ Export a professional feedback report as downloadable PDF.</li>
-          </ul>
-        </div>
+    <div className="min-h-screen bg-surface-bg flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-brand-100/40 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
 
-        {/* Right Panel */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center px-10 py-12">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Create your account</h2>
+      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+        <Link to="/" className="flex justify-center items-center space-x-2 mb-8 group">
+          <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+            <FileText className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-xl font-bold text-ink-900 tracking-tight">AI Career Intelligence</span>
+        </Link>
+        <h2 className="text-center text-3xl font-extrabold text-ink-950 tracking-tight">
+          Create your account
+        </h2>
+        <p className="mt-2 text-center text-sm text-ink-500">
+          Start aligning your skills with your target career
+        </p>
+      </div>
 
-          <form className="space-y-5" onSubmit={handleSignup}>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
+      >
+        <div className="surface-card py-8 px-4 sm:px-10">
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            {error && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start space-x-3">
+                <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                <p className="text-sm text-rose-800 font-medium">{error}</p>
+              </div>
+            )}
 
             <div>
-              <label className="block mb-1 text-sm font-medium">Your Name</label>
-              <input
-                type="text"
-                name="name"
-                required
-                value={form.name}
-                onChange={handleChange}
-                placeholder="John Doe"
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-              />
+              <label htmlFor="name" className="label-base">
+                Full Name
+              </label>
+              <div className="mt-1">
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  autoComplete="name"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="input-base"
+                  placeholder="John Doe"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block mb-1 text-sm font-medium">Email</label>
-              <input
-                type="email"
-                name="email"
-                required
-                value={form.email}
-                onChange={handleChange}
-                placeholder="you@example.com"
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-              />
+              <label htmlFor="email" className="label-base">
+                Email address
+              </label>
+              <div className="mt-1">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="input-base"
+                  placeholder="you@example.com"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block mb-1 text-sm font-medium">Password</label>
-              <input
-                type="password"
-                name="password"
-                required
-                value={form.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-              />
+              <label htmlFor="password" className="label-base">
+                Password
+              </label>
+              <div className="mt-1">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="input-base"
+                  placeholder="••••••••"
+                />
+              </div>
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 rounded-md"
-            >
-              CREATE AN ACCOUNT
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full group"
+              >
+                {loading ? 'Creating account...' : 'Create account'}
+                {!loading && <ArrowRight className="w-4 h-4 ml-2 opacity-50 group-hover:opacity-100 transition-opacity" />}
+              </button>
+            </div>
+          </form>
 
-            <p className="text-sm text-center mt-4 text-gray-600">
-              Already have an account?{" "}
-              <Link to="/login" className="text-purple-600 hover:underline font-medium">
-                Sign in
+          <div className="mt-8 text-center">
+            <p className="text-sm text-ink-600">
+              Already have an account?{' '}
+              <Link to="/login" className="font-semibold text-brand-600 hover:text-brand-500 transition-colors">
+                Sign in instead
               </Link>
             </p>
-          </form>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

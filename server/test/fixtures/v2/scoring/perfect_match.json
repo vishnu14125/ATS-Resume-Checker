@@ -1,0 +1,38 @@
+{
+  "matches": [
+    {
+      "requirementCanonical": "react",
+      "requirementClassification": "required",
+      "matchType": "exact",
+      "confidence": 1.0,
+      "resumeSection": "experience",
+      "resumeEvidence": "Used React for 5 years.",
+      "resumeText": "React",
+      "evidenceType": "explicit",
+      "allResumeEvidences": []
+    },
+    {
+      "requirementCanonical": "node.js",
+      "requirementClassification": "required",
+      "matchType": "exact",
+      "confidence": 1.0,
+      "resumeSection": "experience",
+      "resumeEvidence": "Built API with Node.js.",
+      "resumeText": "Node.js",
+      "evidenceType": "explicit",
+      "allResumeEvidences": []
+    },
+    {
+      "requirementCanonical": "docker",
+      "requirementClassification": "preferred",
+      "matchType": "exact",
+      "confidence": 1.0,
+      "resumeSection": "project",
+      "resumeEvidence": "Containerized with Docker.",
+      "resumeText": "Docker",
+      "evidenceType": "explicit",
+      "allResumeEvidences": []
+    }
+  ],
+  "expectedScore": 58.5
+}

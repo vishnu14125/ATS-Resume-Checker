@@ -1,14 +1,29 @@
- 
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { parseDocument } = require('../services/documentService');
-const Resume = require('../models/Resume');
-const anonymizeResume = require('../services/anonymizer');
-const { analyzeResume } = require('../services/analysisService');
+const { requireAuth } = require('../middleware/authMiddleware');
 
-// Configure multer for file uploads
-const storage = multer.memoryStorage();
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+
+// Configure multer for file uploads securely using disk storage
+const uploadDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
 const upload = multer({
   storage: storage,
   limits: {
@@ -23,74 +38,63 @@ const upload = multer({
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only PDF, DOCX, and TXT files are allowed.'), false);
+      cb(new Error('Invalid file type. Please upload a PDF or DOCX resume.'));
     }
   }
 });
 
+// Wrapper to handle multer errors explicitly
+const uploadMiddleware = (req, res, next) => {
+  upload.single('resume')(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ success: false, error: { message: 'Your resume must be smaller than 10 MB.' } });
+      }
+      if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+        return res.status(400).json({ success: false, error: { message: 'Unexpected field. Please ensure the file input is named "resume".' } });
+      }
+      return res.status(400).json({ success: false, error: { message: err.message } });
+    } else if (err) {
+      return res.status(400).json({ success: false, error: { message: err.message } });
+    }
+    next();
+  });
+};
+
 /**
  * @route POST /api/upload
  * @desc Upload and parse resume document
- * @access Public
+ * @access Private
  */
-router.post('/', upload.single('resume'), async (req, res, next) => {
+router.post('/', requireAuth, uploadMiddleware, async (req, res, next) => {
   try {
-     console.log('📥 Incoming request received!');
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      return res.status(400).json({ success: false, error: { message: 'Please select a resume before continuing.' } });
     }
 
-    const { originalname, mimetype, buffer } = req.file;
-    const parsedText = await parseDocument(buffer, mimetype);
+    const { originalname, mimetype, path: filePath } = req.file;
+    const buffer = fs.readFileSync(filePath);
+    
+    let parsedText;
+    try {
+      parsedText = await parseDocument(buffer, mimetype);
+    } catch (parseError) {
+      console.error('Document parsing error:', parseError);
+      // Pass the specific parser error message through
+      return res.status(400).json({ success: false, error: { message: parseError.message } });
+    } finally {
+      // Clean up the uploaded file securely
+      fs.unlink(filePath, (err) => {
+        if (err) console.error(`Failed to delete temporary file ${filePath}:`, err);
+      });
+    }
 
     if (!parsedText || parsedText.trim().length === 0) {
-      return res.status(400).json({ error: 'Document parsing failed' });
+      return res.status(400).json({ success: false, error: { message: 'Document parsing failed or document is empty.' } });
     }
-
-    const anonymizedText = anonymizeResume(parsedText);
-    const jobDescription = req.body.jobDescription || '';
-
-    const analysis = await analyzeResume(parsedText, jobDescription, originalname);
-
-    // ✅ Validate analysis before saving
-    if (!analysis || !analysis.keywordAnalysis || !analysis.feedback) {
-      console.error("❌ Incomplete or failed analysis. Skipping DB save.");
-      return res.status(500).json({ error: "Resume analysis failed. Please try again later." });
-    }
-
-    const score = analysis.overallScore || 0;
-
-    // 🧠 Debugging Logs
-    console.log('✅ Matched Keywords:', analysis.keywordAnalysis.matched);
-    console.log('❌ Missing Keywords:', analysis.keywordAnalysis.missing);
-    console.log('📝 Suggestions:', analysis.feedback);
-    console.log('📊 Analysis Score:', score);
-
-    const newResume = new Resume({
-      name: req.body.name || 'Unknown',
-      gender: req.body.gender || 'unknown',
-      location: req.body.location || 'unspecified',
-      originalText: parsedText,
-      anonymizedText,
-      score,
-      keywordsMatched: analysis.keywordAnalysis.matched || [],
-      keywordsMissing: analysis.keywordAnalysis.missing || [],
-      suggestions: analysis.feedback || ''
-    });
-
-    console.log('📥 Resume object prepared:', {
-      name: newResume.name,
-      score: newResume.score,
-      matched: newResume.keywordsMatched.length,
-      missing: newResume.keywordsMissing.length
-    });
-
-    await newResume.save();
-    console.log('✅ Resume saved to MongoDB:', newResume._id);
 
     res.json({
       success: true,
-      id: newResume._id,
       data: {
         fileName: originalname,
         fileType: mimetype,
@@ -98,13 +102,19 @@ router.post('/', upload.single('resume'), async (req, res, next) => {
         textLength: parsedText.length,
         wordCount: parsedText.split(/\s+/).length
       },
-      timestamp: new Date().toISOString()
+      message: "File successfully parsed."
     });
 
   } catch (error) {
-    console.error('❌ Upload error:', error.message);
-    console.dir(error, { depth: 5 });
-    next(error);
+    console.error('Upload error:', error);
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (cleanupErr) {
+        console.error('Failed to cleanup file during error:', cleanupErr);
+      }
+    }
+    res.status(500).json({ success: false, error: { message: 'We couldn\'t process your resume. Please try again.' } });
   }
 });
 

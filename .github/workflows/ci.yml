@@ -1,0 +1,41 @@
+name: ATS Resume Checker CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.x'
+
+    - name: Install Server Dependencies
+      run: npm install --prefix server
+
+    - name: Install Client Dependencies
+      run: npm install --prefix client
+
+    - name: Run Backend Tests
+      env:
+        MONGO_TEST_URI: mongodb://127.0.0.1:27017/ats_resume_checker_test_ci
+        JWT_SECRET: testsecret123
+        PORT: 5000
+      run: npm test --prefix server
+
+    - name: Build Frontend
+      run: npm run build --prefix client

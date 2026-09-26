@@ -7,23 +7,32 @@ function validateAnalysisRequest(req, res, next) {
   // Check if required fields exist
   if (!resumeText || !jobDescription) {
     return res.status(400).json({
-      error: 'Missing required fields',
-      message: 'Both resume text and job description are required'
+      success: false,
+      error: {
+        code: 'MISSING_FIELDS',
+        message: 'Both resume text and job description are required'
+      }
     });
   }
 
   // Validate text lengths
   if (typeof resumeText !== 'string' || resumeText.trim().length < 50) {
     return res.status(400).json({
-      error: 'Invalid resume text',
-      message: 'Resume text must be at least 50 characters long'
+      success: false,
+      error: {
+        code: 'INVALID_RESUME',
+        message: 'Resume text must be at least 50 characters long'
+      }
     });
   }
 
   if (typeof jobDescription !== 'string' || jobDescription.trim().length < 20) {
     return res.status(400).json({
-      error: 'Invalid job description',
-      message: 'Job description must be at least 20 characters long'
+      success: false,
+      error: {
+        code: 'INVALID_JD',
+        message: 'Job description must be at least 20 characters long'
+      }
     });
   }
 
@@ -40,8 +49,11 @@ function validateAnalysisRequest(req, res, next) {
 function validateFileUpload(req, res, next) {
   if (!req.file) {
     return res.status(400).json({
-      error: 'No file uploaded',
-      message: 'Please upload a resume file'
+      success: false,
+      error: {
+        code: 'NO_FILE',
+        message: 'Please upload a resume file'
+      }
     });
   }
 
@@ -51,8 +63,11 @@ function validateFileUpload(req, res, next) {
   const maxSize = 10 * 1024 * 1024;
   if (size > maxSize) {
     return res.status(400).json({
-      error: 'File too large',
-      message: `File size must be less than ${maxSize / (1024 * 1024)}MB`
+      success: false,
+      error: {
+        code: 'FILE_TOO_LARGE',
+        message: `File size must be less than ${maxSize / (1024 * 1024)}MB`
+      }
     });
   }
 
@@ -65,16 +80,22 @@ function validateFileUpload(req, res, next) {
 
   if (!allowedTypes.includes(mimetype)) {
     return res.status(400).json({
-      error: 'Invalid file type',
-      message: 'Only PDF, DOCX, and TXT files are supported'
+      success: false,
+      error: {
+        code: 'INVALID_TYPE',
+        message: 'Only PDF, DOCX, and TXT files are supported'
+      }
     });
   }
 
   // Check filename
   if (!originalname || originalname.trim().length === 0) {
     return res.status(400).json({
-      error: 'Invalid filename',
-      message: 'File must have a valid name'
+      success: false,
+      error: {
+        code: 'INVALID_FILENAME',
+        message: 'File must have a valid name'
+      }
     });
   }
 

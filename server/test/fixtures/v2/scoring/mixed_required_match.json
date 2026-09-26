@@ -1,0 +1,35 @@
+{
+  "matches": [
+    {
+      "requirementCanonical": "react",
+      "requirementClassification": "required",
+      "matchType": "exact",
+      "confidence": 1.0,
+      "resumeSection": "experience",
+      "resumeEvidence": "Used React.",
+      "resumeText": "React",
+      "evidenceType": "explicit"
+    },
+    {
+      "requirementCanonical": "node.js",
+      "requirementClassification": "required",
+      "matchType": "missing",
+      "confidence": 1.0,
+      "resumeSection": null,
+      "resumeEvidence": null,
+      "resumeText": null,
+      "evidenceType": null
+    },
+    {
+      "requirementCanonical": "docker",
+      "requirementClassification": "preferred",
+      "matchType": "exact",
+      "confidence": 1.0,
+      "resumeSection": "skills",
+      "resumeEvidence": "Docker",
+      "resumeText": "Docker",
+      "evidenceType": "explicit"
+    }
+  ],
+  "expectedScore": 30.0
+}

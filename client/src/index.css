@@ -1,5 +1,106 @@
 @import "tailwindcss";
 
-/* 
-@import "tailwindcss/preflight";
-@tailwind utilities; */
+@theme {
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed; /* Primary Accent: Royal Indigo */
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+
+  --color-ink-50: #f8fafc;
+  --color-ink-100: #f1f5f9;
+  --color-ink-200: #e2e8f0;
+  --color-ink-300: #cbd5e1;
+  --color-ink-400: #94a3b8;
+  --color-ink-500: #64748b;
+  --color-ink-600: #475569;
+  --color-ink-700: #334155;
+  --color-ink-800: #1e293b;
+  --color-ink-900: #0f172a; /* Deep Ink */
+  --color-ink-950: #020617;
+
+  --color-surface-bg: #fafaf9; /* Warm off-white */
+  
+  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.03), 0 2px 4px -2px rgb(0 0 0 / 0.03);
+  --shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--color-surface-bg)] text-ink-900 font-sans antialiased selection:bg-brand-200 selection:text-brand-900;
+  }
+}
+
+@layer components {
+  /* Typography */
+  .heading-1 {
+    @apply text-4xl md:text-5xl lg:text-6xl font-extrabold text-ink-950 tracking-tight leading-tight;
+  }
+  .heading-2 {
+    @apply text-3xl md:text-4xl font-bold text-ink-900 tracking-tight;
+  }
+  .heading-3 {
+    @apply text-xl md:text-2xl font-semibold text-ink-900;
+  }
+  .heading-4 {
+    @apply text-lg font-semibold text-ink-800;
+  }
+  .body-large {
+    @apply text-lg text-ink-600 leading-relaxed;
+  }
+  .body-base {
+    @apply text-base text-ink-600 leading-relaxed;
+  }
+  .body-small {
+    @apply text-sm text-ink-500;
+  }
+  
+  /* Layout & Cards */
+  .surface-card {
+    @apply bg-white rounded-2xl border border-ink-200/50 shadow-card transition-shadow duration-300;
+  }
+  .surface-card-interactive {
+    @apply bg-white rounded-2xl border border-ink-200/50 shadow-card transition-shadow duration-300 hover:shadow-hover hover:border-brand-200;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl bg-brand-600 text-white font-semibold shadow-sm hover:bg-brand-700 hover:shadow focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:outline-none transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white text-ink-800 font-semibold border border-ink-200 shadow-sm hover:bg-ink-50 hover:border-ink-300 focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:outline-none transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-xl text-ink-600 font-medium hover:bg-ink-100 hover:text-ink-900 focus:ring-2 focus:ring-brand-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Inputs */
+  .input-base {
+    @apply w-full px-4 py-3 rounded-xl bg-white border border-ink-200 text-ink-900 placeholder-ink-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm;
+  }
+  .label-base {
+    @apply block text-sm font-semibold text-ink-700 mb-1.5;
+  }
+
+  /* Badges */
+  .badge-success {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800;
+  }
+  .badge-warning {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800;
+  }
+  .badge-error {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800;
+  }
+  .badge-neutral {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-ink-100 text-ink-700;
+  }
+  .badge-brand {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-100 text-brand-800;
+  }
+}

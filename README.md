@@ -1,84 +1,61 @@
-# 🧠 AI-Powered ATS Resume Checker
+# ATS Resume Checker (2026 Edition)
 
-An intelligent resume analysis tool designed to evaluate resumes against job descriptions using AI. It offers ATS (Applicant Tracking System) compliance checks, keyword optimization, section validation, and a downloadable feedback report — helping job seekers craft powerful, tailored resumes.
+An AI-Powered Career Intelligence & Job Preparation Platform.
 
----
+## What it does
+ATS Resume Checker transforms raw resumes and job descriptions into actionable, structured intelligence. It breaks down ATS scoring deterministically, maps skill gaps, provides personalized interview prep, and structures learning roadmaps.
 
-## ✨ What This Project Does
+## Key Features
+- **Explainable Scoring:** Transparent breakdown of how your resume ranks against required and preferred skills.
+- **Hybrid Intelligence:** Fuses deterministic skill matching algorithms with LLM contextual reasoning to prevent hallucinated scores.
+- **Resume Optimization:** Suggests targeted factual rewrites of your experience bullet points based on the JD.
+- **Career Intelligence:** Job-specific interview prep, learning roadmaps, and project relevance mapping.
+- **Multi-JD Analysis:** Aggregate missing skill trends across multiple target jobs.
 
-- 🔍 Upload your resume and job description
-- 🤖 Uses AI to analyze semantic and keyword match
-- 📊 Produces a section-by-section breakdown (skills, education, experience, etc.)
-- ✅ Checks ATS-friendly formatting and structure
-- 💡 Suggests improvements for better job alignment
-- 📥 Allows exporting feedback as a professional PDF report
+## AI Architecture
+The application uses a provider-agnostic `AIEngine.js` supporting Gemini, OpenAI, and Groq.
+LLM output is strictly coerced into validated JSON payloads via `Zod`. The platform relies on a structural retry loop (`_safeGenerate`) which feeds schema errors back to the model for self-correction.
 
----
+## Security
+- **Data Boundaries:** Fully separated Mongoose schemas with compound unique indexing prevent duplicate requests and enforce strict JWT ownership boundaries.
+- **Prompt Injection:** User payloads are separated from the System Prompt. The model is forbidden from altering scores, and outputs are stripped of hallucinated JSON keys.
 
-## 🚀 Features in Detail
+## Tech Stack
+**Frontend:** React, Vite, Tailwind CSS
+**Backend:** Node.js, Express
+**Database:** MongoDB (Mongoose)
+**Testing:** Jest, Supertest
+**AI Integration:** @google/genai
 
-### 📁 Resume Analysis
-- Parses `.pdf`, `.docx`, and `.txt` files
-- Converts to plain text while preserving logical sections
+## Local Setup
+1. Clone the repository
+2. Server setup: `cd server && npm install`
+3. Client setup: `cd client && npm install`
+4. Provide environment variables in `server/.env` using `server/.env.example` as a template.
+5. Start backend: `cd server && npm run dev`
+6. Start frontend: `cd client && npm run dev`
 
-### 💼 Job Description Matching
-- Compares resume against JD using AI embeddings
-- Identifies skill match, missing skills, and relevance
-
-### 🔍 Keyword Intelligence
-- Shows matched and missing keywords in separate buckets
-- Detects action verbs and job-specific terms
-
-### 📐 Structure Validation
-- Checks for presence of key sections:
-  - Objective / Summary
-  - Education
-  - Experience
-  - Projects
-  - Skills
-- Flags common formatting issues that hurt ATS readability
-
-### 📑 PDF Report Export
-- Section-wise score breakdown
-- Lists matched vs. missing keywords
-- Suggestions and final verdict
-- Exportable with 1-click
-
----
-
-## ⚙️ Tech Stack
-
-### Frontend
-- ✅ React.js
-- 🎨 Tailwind CSS
-- 🎞 Framer Motion
-- 📤 React Dropzone (File Upload)
-- 🔄 Axios (API calls)
-
-### Backend
-- 🧠 Groq API (for LLM & Embedding-based comparisons)
-- 📝 Express.js
-- 🗃️ MongoDB with Mongoose
-- 🧾 PDF kit (for exporting analysis report)
-- 🌐 CORS / Middleware / Logging
-
----
-
-## 🔑 Why Groq?
-
-Groq delivers ultra-fast inference with OpenAI-compatible APIs. This project leverages:
-- `gpt-4-turbo` via Groq for faster semantic matching
-- Compatibility with OpenAI-style embeddings
-- Seamless backend switch without API redesign
-
-> 💡 Example endpoint: `https://api.groq.com/openai/v1/chat/completions`
-
----
-
-## 🛠 Local Setup Guide
-
-### 1. 📦 Clone and Install
+## Running Tests
+To run the full suite across all phases:
 ```bash
-git clone https://github.com/yourusername/ats-resume-checker.git
-cd ats-resume-checker
-npm run install-all   # Installs both client and server dependencies
+cd server
+npm test
+```
+
+## Production Build
+```bash
+cd client
+npm run build
+```
+Or use the provided Docker integration: `docker compose up --build`.
+
+## API Documentation
+See [API.md](./API.md) for full endpoint specifications.
+
+## Limitations
+- AI output heavily depends on the reasoning capability of the configured model (Gemini-2.5-flash recommended).
+- Full global dashboard UI across multiple versions remains partially segmented across horizontal tabs.
+
+## Future Work
+- Implement automated semantic skill clustering across the multi-JD pipeline.
+- Migrate to WebSockets for real-time generative streaming in the UI.

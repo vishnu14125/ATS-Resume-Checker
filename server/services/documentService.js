@@ -15,7 +15,7 @@ async function parseDocument(buffer, mimeType) {
     }
   } catch (error) {
     console.error('Document parsing error:', error);
-    throw new Error(`Failed to parse document: ${error.message}`);
+    throw error;
   }
 }
 
@@ -23,13 +23,17 @@ async function parsePDF(buffer) {
   try {
     const data = await pdfParse(buffer);
     if (!data.text || data.text.trim().length === 0) {
-      throw new Error('No text content found in PDF');
+      throw new Error('This PDF appears to contain scanned images rather than selectable text. Please upload a text-based PDF or DOCX.');
     }
     const cleanedText = cleanExtractedText(data.text);
     console.log(`📄 PDF parsed successfully. Pages: ${data.numpages}, Text length: ${cleanedText.length}`);
     return cleanedText;
   } catch (error) {
     console.error('PDF parsing error:', error);
+    // Re-throw our custom error for scanned images directly
+    if (error.message.includes('scanned images')) {
+      throw error;
+    }
     throw new Error('Failed to parse PDF file. Please ensure the PDF contains readable text.');
   }
 }
@@ -38,13 +42,16 @@ async function parseDOCX(buffer) {
   try {
     const result = await mammoth.extractRawText({ buffer });
     if (!result.value || result.value.trim().length === 0) {
-      throw new Error('No text content found in DOCX');
+      throw new Error('This document appears to contain no readable text. Please ensure you are uploading a text-based DOCX.');
     }
     const cleanedText = cleanExtractedText(result.value);
     console.log(`📄 DOCX parsed successfully. Text length: ${cleanedText.length}`);
     return cleanedText;
   } catch (error) {
     console.error('DOCX parsing error:', error);
+    if (error.message.includes('readable text')) {
+      throw error;
+    }
     throw new Error('Failed to parse DOCX file. Please ensure the document contains readable text.');
   }
 }
