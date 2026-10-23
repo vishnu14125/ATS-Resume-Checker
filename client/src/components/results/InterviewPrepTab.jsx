@@ -1,138 +1,104 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Lightbulb, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, FileText, RefreshCw, Sparkles, Target } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { runAiTask } from '../../lib/api';
+import Loading from '../Loading';
 
-const InterviewPrepTab = ({ resumeId }) => {
-  const [data, setData] = useState(null);
+const UNAVAILABLE = 'AI assistance is not available right now. Your analysis is unaffected.';
+
+/**
+ * Optional AI interview preparation, grounded in the analysis. Generated on
+ * request and stored with the analysis; it never changes any score.
+ */
+const InterviewPrepTab = ({ analysis }) => {
+  const stored = analysis.ai.results.find((r) => r.task === 'interview_prep' && r.status === 'completed');
+  const [prep, setPrep] = useState(stored ? stored.output : null);
   const [loading, setLoading] = useState(false);
+  const available = analysis.ai.status === 'available';
+  const requirements = analysis.result.jobMatch.requirements;
 
-  const fetchPrep = async (generate = false) => {
+  const generate = async (regenerate) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const method = generate ? 'post' : 'get';
-      const res = await axios[method](`/api/career/${resumeId}/interview-prep`, 
-        generate ? {} : undefined,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.data.data) {
-        setData(res.data.data);
-      }
-    } catch (err) {
-      console.error(err);
-      if (generate) toast.error("Failed to generate prep. Please try again.");
+      const result = await runAiTask(analysis.id, 'interview_prep', regenerate);
+      if (result.status === 'completed') setPrep(result.output);
+      else toast.error(result.status === 'unavailable' ? UNAVAILABLE : 'No interview material could be produced from this analysis. Please try again.');
+    } catch {
+      toast.error('The interview material could not be generated. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchPrep(false);
-  }, [resumeId]);
+  if (loading) return <Loading label="Generating interview questions…" />;
 
-  const updateStatus = async (qId, status) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(`/api/career/${resumeId}/interview-prep/${qId}`, 
-        { status },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setData(prev => ({
-        ...prev,
-        questions: prev.questions.map(q => q._id === qId ? { ...q, status } : q)
-      }));
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to update status');
-    }
-  };
-
-  if (loading && !data) {
+  if (!prep) {
     return (
-      <div className="surface-card p-16 text-center">
-        <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-ink-600 font-medium text-lg">Generating tailored interview intelligence...</p>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="surface-card p-12 text-center">
-        <div className="w-16 h-16 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Lightbulb className="w-8 h-8" />
-        </div>
-        <h3 className="heading-3 mb-2">Interview Preparation Workspace</h3>
-        <p className="body-base max-w-md mx-auto mb-8">Generate situational and technical interview questions based strictly on your identified skill gaps and experience.</p>
-        <button onClick={() => fetchPrep(true)} className="btn-primary px-8">
-          <RefreshCw className="w-4 h-4 mr-2" /> Generate Prep Material
+      <div className="card bg-linear-to-b from-surface to-accent-soft px-5 py-12 text-center sm:px-8">
+        <span className="tile tile-brand mx-auto h-14 w-14 rounded-2xl"><Sparkles className="h-7 w-7" /></span>
+        <h2 className="page-title mt-5">Prepare for the interview</h2>
+        <p className="mx-auto mt-2 max-w-xl text-muted">
+          Generate revision topics and interview questions for this role. They are written by AI from this job&apos;s requirements and your resume evidence only, and they do not affect any score.
+        </p>
+        {!available && <p className="alert alert-info mx-auto mt-5 max-w-xl text-left">{UNAVAILABLE}</p>}
+        <button type="button" onClick={() => generate(false)} disabled={!available} className="btn btn-lg btn-primary mt-6">
+          <Sparkles className="h-5 w-5" /> Generate questions
         </button>
       </div>
     );
   }
 
+  const basis = (b) => b.type === 'requirement'
+    ? { icon: Target, text: requirements.find((r) => r.id === b.requirementId)?.displayName || 'Job requirement' }
+    : { icon: FileText, text: 'Your resume' };
+
   return (
     <div className="space-y-8">
-      <div className="surface-card p-8 bg-gradient-to-br from-white to-ink-50">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="heading-2 mb-2 text-ink-950 flex items-center">
-              <Lightbulb className="w-6 h-6 mr-3 text-brand-500" />
-              Interview Preparation
-            </h2>
-            <p className="body-base">Tailored questions to help you defend your experience and address your skill gaps.</p>
-          </div>
-          <button onClick={() => fetchPrep(true)} className="btn-secondary whitespace-nowrap">
-            <RefreshCw className="w-4 h-4 mr-2" /> Regenerate
-          </button>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/20 bg-accent-soft/60 p-4">
+        <p className="flex max-w-xl items-start gap-2 text-sm text-muted">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent" /> Written by AI from this analysis only. Each question is tied to a job requirement or to your resume.
+        </p>
+        <button type="button" onClick={() => generate(true)} disabled={!available} className="btn btn-secondary">
+          <RefreshCw className="h-4 w-4" /> Regenerate
+        </button>
       </div>
 
-      <div className="space-y-6">
-        {data.questions.map((q) => {
-          const isPracticed = q.status === 'practiced';
-          return (
-            <div key={q._id} className={`surface-card p-6 border-l-4 transition-colors ${
-              isPracticed ? 'border-l-emerald-500 bg-emerald-50/20' : 'border-l-brand-500'
-            }`}>
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <span className="badge-brand">{q.category}</span>
-                    {isPracticed && <span className="badge-success flex items-center"><CheckCircle className="w-3 h-3 mr-1"/> Practiced</span>}
-                  </div>
-                  <h3 className="heading-4 text-ink-950 mb-3">{q.question}</h3>
-                  <div className="bg-ink-50 p-4 rounded-xl border border-ink-100">
-                    <p className="text-sm font-bold text-ink-700 mb-1 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-1 text-ink-400" /> Suggested Guidance
-                    </p>
-                    <p className="text-sm text-ink-600 leading-relaxed">{q.suggestedFocus}</p>
-                  </div>
+      {prep.topics.length > 0 && (
+        <section>
+          <h2 className="section-title">Topics to revise</h2>
+          <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {prep.topics.map((topic, i) => (
+              <li key={i} className="card flex gap-3 p-4">
+                <span className="tile tile-accent h-9 w-9"><BookOpen className="h-4 w-4" /></span>
+                <div className="min-w-0">
+                  <p className="font-semibold">{topic.topic}</p>
+                  <p className="mt-1 text-sm text-muted">{topic.why}</p>
                 </div>
-                
-                <div className="shrink-0 flex items-start md:w-40 pt-2">
-                  {!isPracticed ? (
-                    <button 
-                      onClick={() => updateStatus(q._id, 'practiced')}
-                      className="w-full btn-ghost border border-ink-200"
-                    >
-                      Mark Practiced
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => updateStatus(q._id, 'pending')}
-                      className="w-full text-sm font-medium text-ink-500 hover:text-ink-700 transition-colors"
-                    >
-                      Undo
-                    </button>
-                  )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section>
+        <h2 className="section-title">Questions ({prep.questions.length})</h2>
+        <ol className="mt-4 space-y-3">
+          {prep.questions.map((q, i) => {
+            const { icon: Icon, text } = basis(q.basis);
+            return (
+              <li key={i} className="card flex gap-4 p-4 sm:p-5">
+                <span className="tile tile-info font-display text-sm font-extrabold" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                <div className="min-w-0">
+                  <p className="font-semibold leading-snug">{q.question}</p>
+                  <p className="mt-2 flex items-start gap-1.5 text-sm text-muted">
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0" /> <span className="min-w-0 break-words">Based on: {text}</span>
+                  </p>
                 </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
     </div>
   );
 };

@@ -1,12 +1,12 @@
 {
   "name": "ats-resume-checker",
   "version": "1.0.0",
-  "description": "AI-powered ATS Resume Score Checker with semantic matching and improvement suggestions",
+  "description": "ATS resume checker: deterministic Resume Health and Job Match analysis with optional grounded AI",
   "main": "server/index.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd server && npm run dev",
-    "client": "cd client && npm start",
+    "client": "cd client && npm run dev",
     "build": "cd client && npm run build",
     "install-all": "npm install && cd server && npm install && cd ../client && npm install",
     "start": "cd server && npm start"

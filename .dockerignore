@@ -1,9 +1,26 @@
-node_modules
-client/node_modules
-server/node_modules
+# Keep secrets, local data and development files out of the build context.
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
 .mongo_data
-npm-debug.log
-.DS_Store
-.env
-build
-dist
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/*.log
+**/.DS_Store
+
+# The image runs the API only.
+client
+brain
+*.md
+*.txt
+*.js
+
+# Local leftovers, sample files, tests and manual scripts.
+server/uploads
+server/test
+server/scripts
+server/*.pdf

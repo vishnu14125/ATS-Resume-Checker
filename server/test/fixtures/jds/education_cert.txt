@@ -1,0 +1,12 @@
+Cloud Engineer
+
+Required Qualifications
+- Bachelor's degree in Computer Science or a related field is required.
+- Minimum 4 years of experience in cloud infrastructure.
+- AWS Certified Solutions Architect certification required.
+- Must be authorized to work in the United States.
+
+Preferred Qualifications
+- Master's degree preferred.
+- Certified Kubernetes Administrator (CKA).
+- Fluent in Spanish.

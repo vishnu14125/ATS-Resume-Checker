@@ -1,0 +1,18 @@
+Frontend Developer
+San Francisco, CA (Hybrid)
+
+What You'll Do
+- Build accessible, responsive user interfaces.
+- Write unit and end-to-end tests.
+- Collaborate with designers on a shared design system.
+
+Requirements
+- 3+ years building modern web UIs.
+- Expert knowledge of React and TypeScript.
+- Strong HTML and CSS skills.
+- Experience with accessibility (WCAG) standards.
+- Experience writing tests with Jest and Cypress.
+
+Nice to Have
+- Experience with Next.js.
+- Familiarity with GraphQL.

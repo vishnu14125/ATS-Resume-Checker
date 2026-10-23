@@ -1,0 +1,21 @@
+Software Engineer
+
+About the Role
+Join our team to build and ship customer-facing web features.
+
+Responsibilities
+- Develop and maintain web applications.
+- Write clean, tested code.
+- Participate in code reviews.
+
+Required Qualifications
+- 2+ years of professional software development experience.
+- Strong proficiency in JavaScript.
+- Experience with React and Node.js.
+
+Preferred Qualifications
+- Experience with Docker.
+- Familiarity with AWS.
+
+Benefits
+- Competitive salary and health insurance.

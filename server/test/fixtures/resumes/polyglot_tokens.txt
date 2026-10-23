@@ -1,0 +1,27 @@
+Dana Whitfield
+dana.whitfield@example.com | github.com/danawhitfield
+
+SUMMARY
+Mobile and systems engineer comfortable across several languages and frameworks.
+
+SKILLS
+Languages: C, C++, C#, Java, JavaScript, TypeScript, Go
+Frontend: React, React Native, Angular
+Backend: Node.js, .NET, Spring Boot
+Databases: SQL, PostgreSQL, MongoDB
+
+EXPERIENCE
+Mobile Engineer
+Northwind Apps
+2022 - 2024
+- Shipped a React Native app to iOS and Android with 4.8-star rating.
+- Wrote native modules in C++ for performance-critical image processing.
+- Built backend services in C# and .NET.
+
+PROJECTS
+Game Engine Prototype
+- Implemented a small game engine in C++ and rendered with OpenGL.
+Tech: C++, OpenGL
+
+EDUCATION
+B.S. Computer Science - Georgia Tech (2018 - 2022)

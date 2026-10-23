@@ -1,0 +1,15 @@
+ALEX KUMAR  ***  Software Developer  ***  alex.kumar@example.com
+
+>> TECH STACK <<
+Python :: Django :: Flask :: React :: AWS :: Docker
+
+>> WHERE I'VE WORKED <<
+[2023-Present] Backend Developer @ CloudScale
+   * Designed serverless functions on AWS Lambda.
+   * Built Django REST APIs.
+
+[2021-2023] Junior Developer @ WebForge
+   * Maintained Flask microservices.
+
+>> SCHOOL <<
+B.S. Information Technology, City University, 2017-2021

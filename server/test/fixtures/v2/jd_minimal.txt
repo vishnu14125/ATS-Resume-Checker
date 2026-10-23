@@ -1,4 +1,0 @@
-Data Scientist
-
-Requirements
-Python and Pandas are mandatory.

@@ -1,0 +1,34 @@
+Priya Nair
+priya.nair@example.com | +91 98765 43210 | Bengaluru, India
+github.com/priyanair | linkedin.com/in/priya-nair
+
+SUMMARY
+Final-year Computer Science student seeking a software engineering internship. Interested in backend development and distributed systems.
+
+EDUCATION
+B.Tech in Computer Science and Engineering
+National Institute of Technology
+Expected May 2027
+CGPA: 8.9/10
+
+SKILLS
+Languages: Python, Java, JavaScript, C++
+Web: React, Node.js, Express, HTML, CSS
+Databases: MongoDB, PostgreSQL
+Tools: Git, Docker, Linux
+
+EXPERIENCE
+Software Engineering Intern
+Acme Labs
+Jun 2025 - Aug 2025
+- Built a REST API in Node.js and Express serving 50k requests/day.
+- Reduced query latency by 35% by adding PostgreSQL indexes.
+
+PROJECTS
+Campus Marketplace
+- Developed a full-stack marketplace using React and Node.js.
+- Deployed on AWS with Docker containers.
+Tech: React, Node.js, MongoDB, AWS, Docker
+
+CERTIFICATIONS
+AWS Certified Cloud Practitioner - 2025

@@ -1,9 +1,0 @@
-Bob Jones
-bob@example.com
-
-Projects
-Ecommerce Platform
-Built a full-stack marketplace using React and MongoDB.
-
-Chat Application
-Real-time chat using NodeJS and Redis.

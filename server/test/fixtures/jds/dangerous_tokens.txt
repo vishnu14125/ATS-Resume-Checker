@@ -1,0 +1,10 @@
+Platform Engineer
+
+Required Qualifications
+- Strong experience with Java and JavaScript.
+- Systems programming in C, C++, and C#.
+- Experience building with React and React Native.
+- Backend development with Node and Node.js.
+
+Preferred Qualifications
+- Experience with TypeScript.

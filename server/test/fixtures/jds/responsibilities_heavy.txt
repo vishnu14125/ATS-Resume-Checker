@@ -1,0 +1,13 @@
+Engineering Lead
+
+What You'll Do
+- Build and scale distributed backend services handling high traffic.
+- Design event-driven data pipelines for analytics.
+- Mentor engineers and lead technical design reviews.
+- Partner with product managers to shape the roadmap.
+- Drive incident response and improve system reliability.
+- Establish engineering best practices across teams.
+- Own the architecture for a new payments platform.
+
+Requirements
+- Significant backend engineering experience.

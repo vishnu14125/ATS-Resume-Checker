@@ -1,0 +1,20 @@
+Sofía Martínez
+sofia.martinez@example.com | https://github.com/sofiamartinez | https://sofia.dev
+
+SUMMARY
+Backend engineer focused on performance and cost efficiency.
+
+EXPERIENCE
+Backend Engineer, DataWorks
+2024 – 2026
+• Cut infrastructure costs by 95%, saving $20,000 per year.
+• Migrated services from C# to Go, improving throughput 3x.
+• Maintained CI/CD pipelines and REST / gRPC APIs.
+
+SKILLS
+C++, C#, JavaScript, React / Node.js, PostgreSQL, Docker, Kubernetes
+
+EDUCATION
+M.S. in Computer Science
+Universidad Politécnica
+2022 – 2024

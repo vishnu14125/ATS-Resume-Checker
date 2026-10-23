@@ -1,43 +1,27 @@
-# Use official Node.js runtime as a parent image
-FROM node:20-alpine AS builder
+# API image. The frontend is a static Vite build (npm run build --prefix client)
+# and is hosted separately; point it at this API with VITE_API_BASE_URL.
+#
+# Configuration comes from environment variables at run time (see server/.env.example):
+#   docker build -t ats-api .
+#   docker run -p 5000:5000 --env-file production.env ats-api
+# Use a dedicated production env file: never server/.env, which is a development config.
+# No .env file is copied into the image (.dockerignore).
+FROM node:22-slim
 
-# Set working directory
-WORKDIR /app
-
-# Copy root package.json and workspace configuration
-COPY package*.json ./
-COPY server/package*.json ./server/
-COPY client/package*.json ./client/
-
-# Install dependencies
-RUN npm install --prefix server
-RUN npm install --prefix client
-
-# Copy application code
-COPY server ./server
-COPY client ./client
-
-# Build the frontend client
-RUN npm run build --prefix client
-
-# Production Stage
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy the server directory (including node_modules installed earlier)
-COPY --from=builder /app/server ./server
-# Copy the built frontend static files to the server's public folder if served statically, 
-# or just run it via NGINX. Let's assume server serves the client or they run separately.
-# For a full-stack deploy, it's common to copy client build to server/public.
-COPY --from=builder /app/client/dist ./server/public
-
-# Environment Configuration
 ENV NODE_ENV=production
-ENV PORT=5000
-
-# Expose port
-EXPOSE 5000
-
 WORKDIR /app/server
+
+# Production dependencies only, exactly as locked.
+COPY server/package.json server/package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+COPY server ./
+
+# Nothing is written to disk at run time: uploads are processed in memory.
+USER node
+
+ENV PORT=5000
+EXPOSE 5000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3   CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
 CMD ["node", "index.js"]

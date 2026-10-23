@@ -1,0 +1,16 @@
+Backend Developer at DataForge
+
+Responsibilities
+- Design and build REST APIs.
+- Implement authentication and authorization.
+- Optimize SQL queries and database schemas.
+
+Required Qualifications
+- Must have strong experience with Node.js.
+- Must have experience designing REST APIs.
+- Proficiency with SQL and PostgreSQL is required.
+- Experience implementing authentication (OAuth, JWT).
+
+Preferred Qualifications
+- Experience with Redis.
+- Experience with message queues such as Kafka.
